@@ -44,6 +44,55 @@
 		})
 	}
 
-
+    // active, completed 버튼 클릭했을때 발생하는 이벤트
+    function filter(id) {
+            var urlParam = '';
+            if(id == 0) {
+                urlParam = '/active';
+            } else if(id == 1) {
+                urlParam = '/completed';
+            }
+            
+            $.ajax({
+                url: './api/todos' + urlParam,
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    var items = [];
+                    for(var i = 0; i < data.length; i++) {
+                        var className = '';
+                        var inputChecked = '';
+                        if(data[i].completed == 1) {
+                            className = ' class="completed"';
+                            inputChecked = ' checked';
+                        }
+                        items.push("<li" + className + " data-id=" + data[i].id + ">" + "<div class='view'><input class='toggle' type='checkbox'" + inputChecked + ">\
+                                    <label>" + data[i].todo + "</label><button class='destroy'></button></div></li>");
+                    }
+                    $('.todo-list').html(items);
+                },
+                error: function() {
+                    $('.new-todo').attr('disabled', 'disabled');
+                    alert('오류가 발생하였습니다. 잠시 후 다시 시도해 주세요.');
+                    $('.main').html('<ul class="todo-list"><li><div class="view"><label>Loading Failed</label></div></li></ul>');
+                }
+            })
+        }
 	}  
+    
+    // 버튼 이벤트 모음
+    $('#btnActive').click(function() {
+		event.preventDefault();
+		$('.filters > li > a.selected').removeClass();
+		$('#btnActive').attr('class', 'selected');
+		filter(0);
+	});
+
+	$('#btnCompleted').click(function() {
+		event.preventDefault();
+		$('.filters > li > a.selected').removeClass();
+		$('#btnCompleted').attr('class', 'selected');
+		filter(1);
+	});
+ 
 })(window);
