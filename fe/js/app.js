@@ -44,7 +44,7 @@
 		})
 	}
 
-    // active, completed 버튼 클릭했을때 발생하는 이벤트
+    // active, completed 버튼 클릭했을때 일정 목록 
     function filter(id) {
             var urlParam = '';
             if(id == 0) {
@@ -80,7 +80,8 @@
         }
 	}  
     
-    // 버튼 이벤트 모음
+    // 마우스 이벤트 & 키보드 이벤트 모음
+    // active 버튼 눌렀을 때
     $('#btnActive').click(function() {
 		event.preventDefault();
 		$('.filters > li > a.selected').removeClass();
@@ -88,11 +89,109 @@
 		filter(0);
 	});
 
+    // complete 버튼 눌렀을 때
 	$('#btnCompleted').click(function() {
 		event.preventDefault();
 		$('.filters > li > a.selected').removeClass();
 		$('#btnCompleted').attr('class', 'selected');
 		filter(1);
 	});
+
+    // all 버튼 눌렀을 때
+    $('#btnAll').click(function() {
+		event.preventDefault();
+		$('.filters > li > a.selected').removeClass();
+		$('#btnAll').attr('class', 'selected');
+		all();
+		
+	});
+
+    // 새로운 일정 입력후 엔터 눌렀을 때
+    	$('.new-todo').keypress(function(e) {
+		if(e.keyCode == 13) {
+			$(this).trigger('enterKey');
+		}
+	});
  
+    // input(.new-todo) 박스에 일정 등록하고 일정이 등록되면 이벤트 카운트 숫자를 +1 더함 
+    $('.new-todo').bind('enterKey', function(e) {
+            var text = $.trim($(this).val());
+            if(text == "") {
+                alert("내용을 입력해 주세요.");
+            } else {
+                $.ajax({
+                    url: './api/todos/',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({
+                        todo: text,
+                        completed: 0
+                    }),
+                    dataType: 'json',
+                    success: function(data) {
+                        var item = '';
+                        var count = parseInt($('.todo-count > strong').text());
+                        $('.todo-count > strong').text(count + 1);
+                        if($('#btnCompleted').attr('class') != 'selected') {	
+                            item = "<li data-id=" + data.id + ">" + "<div class='view'><input class='toggle' type='checkbox'>\
+                                        <label>" + data.todo + "</label><button class='destroy'></button></div></li>";
+                            if($('.todo-list').children().length == 0) {
+                                $('.todo-list').append(item);
+                            } else {
+                                $(item).insertBefore($('.todo-list').children().first());
+                            }
+                        }
+                        $('.new-todo').val("");
+                    },
+                    error: function() {
+                        alert('등록을 실패했습니다. 잠시 후 다시 시도해 주세요.');
+                    }
+                })
+            }
+        });
+
+// active, complet 버튼 눌렀을 때 일정 목록을 toggle( 보여주거나 없에주는 역할)
+$('.todo-list').on('click', '.toggle', function() {
+		var updateId = $(this).parent().parent().data('id');
+		var parent = $(this).parent().parent();
+		
+		if(this.checked) {
+			var flag = 1;
+		} else {
+			var flag = 0;
+		}
+
+		$.ajax({
+			url: './api/todos/' + updateId,
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			data: JSON.stringify({completed: flag}),
+			dataType: 'json',
+			success: function(data) {
+				var count = parseInt($('.todo-count > strong').text());
+				if(flag == 1) {
+					if($('#btnActive').attr('class') == 'selected') {
+						$(parent).remove();
+					} else {
+						$(parent).addClass("completed");
+					}
+					$('.todo-count > strong').text(count - 1);
+				} else {
+					if($('#btnCompleted').attr('class') == 'selected') {
+						$(parent).remove();
+					} else {
+						$(parent).removeClass("completed");
+					}
+					$('.todo-count > strong').text(count + 1);
+				}
+			},
+			error: function() {
+				alert('오류가 발생하였습니다. 잠시 후 다시 시도해 주세요.');
+			}
+		})
+	});
 })(window);
