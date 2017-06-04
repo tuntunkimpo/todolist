@@ -194,4 +194,48 @@ $('.todo-list').on('click', '.toggle', function() {
 			}
 		})
 	});
+
+    // x 버튼 눌르면 일정 delete
+	$('.todo-list').on('click', '.destroy', function() {
+		var deleteId = $(this).parent().parent().data('id');
+		var parent = $(this).parent().parent();
+
+		$.ajax({
+			url: './api/todos/' + deleteId,
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			dataType: 'json',
+			success: function(data) {
+				if($(parent).attr('class') != 'completed') {
+					var count = parseInt($('.todo-count > strong').text());
+					$('.todo-count > strong').text(count - 1);
+				}
+				$(parent).remove();
+			},
+			error: function() {
+				alert('오류가 발생하였습니다. 잠시 후 다시 시도해 주세요.');
+			}
+		})
+	});
+
+
+    // 완료한 일 한번에 삭제 하기 버튼
+    $('.clear-completed').click(function() {
+		$.ajax({
+			url: './api/todos/',
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			dataType: 'json',
+			success: function(data) {
+				$('.todo-list > li.completed').remove();
+			},
+			error: function() {
+				alert('오류가 발생하였습니다. 잠시 후 다시 시도해 주세요.');
+			}
+		})
+	});
 })(window);
